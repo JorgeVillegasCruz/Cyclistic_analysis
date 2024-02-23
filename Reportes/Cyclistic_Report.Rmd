@@ -1,0 +1,334 @@
+---
+title: "Cyclistic Analisis"
+author: "Jorge A. Villegas Cruz"
+date: "2024-01-17"
+output: html_document
+---
+
+
+# Contexto
+### Escenario
+
+Trabaja en el equipo de analistas de marketing de Cyclists, una empresa de bicicletas compartidas de Chicago. La directora de marketing cree que el éxito futuro de la empresa depende de maximizar la cantidad de membresías anuales. Por lo tanto, tu equipo quiere entender qué diferencias existen en el uso de las bicicletas Cyclistic entre los ciclistas ocasionales y los miembros anuales. A través de estos conocimientos, tu equipo diseñará una nueva estrategia de marketing para convertir a los ciclistas ocasionales en miembros anuales. Sin embargo, antes de eso, los ejecutivos de Cyclists deben aprobar tus recomendaciones; por eso, debes respaldar tu propuesta con una visión convincente de los datos y visualizaciones profesionales de los mismos.
+
+### Personal interesado
+
+*	**Cyclistic**: Un programa de bicicletas compartidas que incluye 5,800 bicicletas y 600 estaciones. Cyclistic se destaca por ofrecer también bicicletas reclinadas, triciclos manuales y bicicletas de carga que ofrecen un uso más inclusivo de las bicicletas compartidas para las personas con discapacidad y los ciclistas que no pueden utilizar una bicicleta estándar de dos ruedas. La mayoría de los ciclistas eligen las bicicletas tradicionales, alrededor de un 8% de los ciclistas usan las opciones asistidas. Los usuarios de Cyclistic son más propensos a utilizar la bicicleta para recreación, pero alrededor del 30% la utiliza para ir al trabajo cada día.
+*	**Lily Moreno**: La directora de marketing y tu gerente. Moreno es responsable del desarrollo de campañas e iniciativas para promover el programa de bicicletas compartidas. Las campañas pueden incluir correo electrónico, redes sociales y otros canales.
+*	**Equipo de análisis computacional de datos de marketing de Cyclistic**: Un equipo de analistas de datos que se encargan de recopilar, analizar e informar datos que ayudan a conducir la estrategia de marketing de Cyclistic. Te incorporaste a este equipo hace seis meses y te has dedicado no solo a conocer la misión y las metas de negocios de Cyclistic, sino también a ver cómo puedes ayudar a Cyclistic a lograrlo, desde tu posición de analista de datos júnior.
+*	**Equipo ejecutivo de Cyclistic**: El equipo ejecutivo, sumamente detallista, decidirá si aprueba el programa de marketing recomendado.
+
+
+# Preguntar
+### Objetivo del análisis
+Se fijaron tres preguntas que guiarán el futuro programa de marketing:
+
+1. ¿En qué se diferencian los socios anuales y los ciclistas ocasionales con respecto al uso de las bicicletas de Cyclistic?
+
+2. ¿Por qué los ciclistas ocasionales comprarían membresías anuales de Cyclistic?
+
+3. ¿Cómo puede usar Cyclistic los medios digitales para influenciar a los ciclistas ocasionales a convertirse en miembros?
+
+Moreno asignó la primera pregunta para responder: ¿En qué se diferencian los socios anuales y los ciclistas ocasionales con respecto al uso de las bicicletas de Cyclistic?
+
+# Preparar
+### Dataset
+Se usarán los datos históricos de los viajes de Cyclistic para analizar e identificar tendencias de los últimos 12 meses. Los conjuntos de datos son apropiados y permitirán responder las preguntas de la empresa. Los datos han sido proporcionados por Motivate International Inc. bajo esta [licencia](https://divvybikes.com/data-license-agreement). Estos son datos públicos que puedes usar para explorar cómo difieren los tipos de clientes que usan las bicicletas Cyclistic.
+
+El conjunto de datos proporciona información sobre los tipos de bicicletas, estaciones, comienzo y finalización de los viajes los cuales serán de ayuda para localizar tendencias y patrones.
+
+Ubicación de los datasets de los ultimos 12 meses del 2023:
+
+Estructura de los datos pose 13 columnas
+
+* __ride_id__: Id del viaje
+* __rideable_type__: Tipo de bicicleta usada.
+* __started_at__: Fecha y hora de inicio del viaje.
+* __started_at_date__: Fecha de inicio de viaje
+* __started_at_time__: Hora de inicio de viaje
+* __ended_at__: Fecha y hora de finalización del viaje.
+* __ended_at__: Fecha de finalización del viaje.
+* __ended_at__: Hora de finalización del viaje.
+* __start_station_name__: Nombre de la estación donde inició el viaje.
+* __start_station_id__: Id de la estación de inicio
+* __end_station_name__: Nombre de la estación donde finalizo el viaje.
+* __end_station_id__: Id de la estación de finalización.
+* __start_lat__: Latitud de inicio.
+* __start_lng__: Longitud de inicio.
+* __end_lat__: Latitud de finalización.
+* __end_lng__: Longitud de finalización
+* __member_casual__: Tipo de usuario.
+* __ride_length__: Duración del viaje.
+* __day_of_week__: Dia de la semana en que inicio el viaje (domingo = 1, sabado = 7)
+
+# Procesar
+
+Debido al extenso volumen de registros en el conjunto de datos, se ha descartado el uso de Excel para evitar posibles inconvenientes de rendimiento durante el análisis. En su lugar, se ha decidido utilizar el lenguaje R, conocido por su eficacia en el manejo de conjuntos de datos extensos y por proporcionar un entorno analítico más especializado. Este enfoque garantiza una ejecución más eficiente y optimizada, contribuyendo a una realización más efectiva del análisis de datos.
+
+Para garantizar la integridad de los datos se realizara una limpieza en los datos para eliminar errores y duplicados, así como normalizar los datos para que sean coherentes.
+
+### Carga de Bibliotecas/Paquetes
+```{r}
+library(tidyverse)
+library(data.table)
+library(janitor)
+library(skimr)
+library(dplyr)
+library(readr)
+
+```
+
+### Configuración del entorno de trabajo
+```{r}
+# 1. Removemos notación científica
+options(scipen = 999)
+
+# 2. Caracteres usados en el idioma español
+Sys.setlocale("LC_ALL", 'es_ES.UTF-8')
+
+```
+
+### Importar bases de datos.
+
+```{r}
+# Carga de datos
+trips_2023_01 <- read.csv("../Datos/2023_01_tripdata.csv")
+trips_2023_02 <- read.csv("../Datos/2023_02_tripdata.csv")
+trips_2023_03 <- read.csv("../Datos/2023_03_tripdata.csv")
+trips_2023_04 <- read.csv("../Datos/2023_04_tripdata.csv")
+trips_2023_05 <- read.csv("../Datos/2023_05_tripdata.csv")
+trips_2023_06 <- read.csv("../Datos/2023_06_tripdata.csv")
+trips_2023_07 <- read.csv("../Datos/2023_07_tripdata.csv")
+trips_2023_08 <- read.csv("../Datos/2023_08_tripdata.csv")
+trips_2023_09 <- read.csv("../Datos/2023_09_tripdata.csv")
+trips_2023_10 <- read.csv("../Datos/2023_10_tripdata.csv")
+trips_2023_11 <- read.csv("../Datos/2023_11_tripdata.csv")
+trips_2023_12 <- read.csv("../Datos/2023_12_tripdata.csv")
+```
+
+Se realizara una revision de todos los datasets
+```{r}
+#Revision de datos.
+glimpse(trips_2023_01)
+glimpse(trips_2023_02)
+glimpse(trips_2023_03)
+glimpse(trips_2023_04)
+glimpse(trips_2023_05)
+glimpse(trips_2023_06)
+glimpse(trips_2023_07)
+glimpse(trips_2023_08)
+glimpse(trips_2023_09)
+glimpse(trips_2023_10)
+glimpse(trips_2023_11)
+glimpse(trips_2023_12)
+```
+
+## Limpieza y normalización
+Para trabajar de la mejor manera con los conjuntos de datos y evitar valores atipicos se realizara una limpieza de los datos para eliminar valores que afecten el analisis posterior.
+
+* Nombres de columnas
+* Valores NULL
+* Valores vacios
+* Valores repetidos
+* Espaciado doble
+* Cambio de formatos
+
+Se realizara una eliminación de valores NA, valores repetidos y valores vacios de cada dataset.
+```{r}
+# Eliminacion de valores NA, valores vacios y duplicados.
+trips_2023_01 <- trips_2023_01 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_02 <- trips_2023_02 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_03 <- trips_2023_03 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_04 <- trips_2023_04 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_05 <- trips_2023_05 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_06 <- trips_2023_06 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_07 <- trips_2023_07 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_08 <- trips_2023_08 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_09 <- trips_2023_09 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_10 <- trips_2023_10 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_11 <- trips_2023_11 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+trips_2023_12 <- trips_2023_12 %>% drop_na() %>% unique() %>% .[rowSums(. == "") == 0, ]
+```
+
+A continuacón se uniran los datasets en uno solo, antes de unirlos se realizara una revisión de cada columna y corroborar que son conpatibles y contienen el mismo tipo de dato.
+
+```{r}
+# Revisar que las columnas sean iguales
+compare_df_cols(trips_2023_01,trips_2023_02,
+                trips_2023_03,trips_2023_04,
+                trips_2023_05,trips_2023_06,
+                trips_2023_07,trips_2023_08,
+                trips_2023_09,trips_2023_10,
+                trips_2023_11,trips_2023_12)
+```
+
+Una vez que se han limpiado los datos y se a corroborado que sean compatibles, se procedera a unirlos.
+
+```{r}
+# Unir todos los data.frame.
+trips_2023_year <- bind_rows(trips_2023_01,trips_2023_02,
+                             trips_2023_03,trips_2023_04,
+                             trips_2023_05,trips_2023_06,
+                             trips_2023_07,trips_2023_08,
+                             trips_2023_09,trips_2023_10,
+                             trips_2023_11,trips_2023_12)
+
+glimpse(trips_2023_year)
+```
+
+### Muestra de la población.
+
+Al revisar el nuevo data.frame se a decidido tomar una muestra para evitar un bajo rendimiento al trabajar con un numero de registros muy alto, asi tambien se eliminaran las columnas que no seran utilizadas para el analisis, para ello se han tomado los siguientes datos para realizarlo.
+
+#### Muestra de la población.
+* __Nivel de confianza  : 95%__
+* __Margen de error     : 5%__
+* __Población           : 4331707__
+* __Muestra             : 385__
+
+```{r}
+# Creación de data.frame con la muestra
+trips_2023_muestra <- trips_2023_year[sample(nrow(trips_2023_year), 385), ] %>% 
+  select(-ride_id,-started_at,-ended_at)
+skim_without_charts(trips_2023_muestra)
+```
+
+Se realizara una verificaón de que no existan valores NA o duplicados
+```{r}
+# Verificar existencia de NA y duplicados.
+any(is.na(trips_2023_muestra))
+any(duplicated(trips_2023_muestra))
+any(trips_2023_muestra == "")
+```
+
+### Cambio de formatos y correcciónes de datos
+En el data.frame existen dos columnas que no tienen el formato correcto, se realizara una corrección al formato fecha y hora.
+
+Cambio de formatos a formato Fecha de las columnas:
+
+* started_at_date
+* ended_at_date.
+```{r}
+# Convertir a formato Date
+trips_2023_muestra$started_at_date <- as.Date(dmy(trips_2023_muestra$started_at_date))
+trips_2023_muestra$ended_at_date <- as.Date(dmy(trips_2023_muestra$ended_at_date))
+```
+
+Cambio de formato de 3 columnas a formato ITime y manejar los datos de tiempo.
+
+* started_at_time
+* ended_at_time
+* ride_length
+```{r}
+#Convertir a formato Hora ITime
+trips_2023_muestra$started_at_time <- as.ITime(trips_2023_muestra$started_at_time)
+trips_2023_muestra$ended_at_time <- as.ITime(trips_2023_muestra$ended_at_time)
+trips_2023_muestra$ride_length <- as.ITime(trips_2023_muestra$ride_length)
+```
+
+Se cambiaran los valores de day_of_week ya que se representan valores representando cada dia de la semana (1 = Domingo, 7 = Sabado).
+```{r}
+# Reemplazar los valores de 1 a 7 en la columna day_of_week por los nombres de los días de la semana
+dias_semana <- c("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado")
+trips_2023_muestra <- trips_2023_muestra %>%
+  mutate(day_of_week = factor(day_of_week, levels = 1:7, labels = dias_semana))
+```
+
+
+Se realizara una visualización de los nuevos datos con los que trabajaremos para revisar si no existe algun tipo de error en ellos.
+```{r}
+glimpse(trips_2023_muestra)
+```
+
+# Analisis
+
+## Analisis para identificar diferencias entre los tipos de usuarios.
+
+Se realizara un analisis basico de todas las columnas del dataset
+```{r}
+summary(trips_2023_muestra)
+```
+
+### Numero de usuarios para cada tipo, media de tiempo, mediana, desviación estandar
+
+```{r}
+# Numero de usuarios, el tiempo promedio de viaje
+trips_2023_muestra %>%
+  group_by(member_casual) %>%
+  summarize(
+    viajes = n(),
+    media = mean(ride_length),
+    mediana = median(ride_length),
+    Des_estandar = sd(ride_length)
+  )
+```
+
+- Se a descubierto que a pesar de que el numero de los miembros casuales es menor que los miembros anuales, los miembros casuales son los que realizan los viajes con los tiempos  mas largos.
+
+### Dias de la semana con mas viajes realizados
+```{r}
+# Dias mas transcurridos de los usuarios en la semana
+ggplot(data = trips_2023_muestra, mapping = aes(x = as.factor(day_of_week), fill = as.factor(day_of_week))) +
+  geom_bar() +
+  facet_wrap(~member_casual) +
+  labs(title = "Días de Mayor Movimiento Semanal",
+       subtitle = "Dias de la semana con mas viajes realizados",
+       x = "Dias de la semana",
+       y = "Número de viajes",
+       fill = "Dias de la semana"
+       ) +
+  theme(axis.text.x = element_blank())
+```
+
+- Los datos de la grafica demuestan la frecuencia en la que los usuarios usan mas las bicicletas, descubriendo que los miembros casuales realizan mas viajes los fines de semana (sabado y domingo) y los miembros anuales realizan mas viajes a lo largo de la semana.
+
+### Preferecia de bicicletas de cada usuario.
+```{r}
+ggplot(data = trips_2023_muestra, 
+       mapping = aes(x = rideable_type, label = rideable_type, fill = rideable_type)) +
+  geom_bar() + facet_grid(~member_casual) +
+  labs(title = "Preferencia de bicicletas",
+       subtitle = "Preferencia de los usuarios con las bicicletas",
+       x = "Tipos de bicicletas", y = "Número de bicicletas") +
+  geom_text(aes(label=..count..), stat='count',  #Agrega ñps valores sobre las barras
+            position=position_dodge(0.5),
+            vjust=-0.2, 
+            size=3.5
+  )
+```
+
+- Como se describio en los datos iniciales, ambos tipos de usuarios prefieren mas las "bicilcetas clasicas", pero asi tambien se ha descubierto que los miembros casuales hacen mas uso de las "bicicleta acoplada" para usos recreativos.
+
+
+## Estaciones mas usadas de los miembros casuales.
+
+```{r}
+# Filtrando las estaciones mas usadas por los usuarios casuales.
+top_stations <- 
+  trips_2023_muestra %>%
+  dplyr::filter(member_casual == "casual") %>%
+  select(start_station_name, end_station_name) %>%
+  pivot_longer(cols = everything(), names_to = "type", values_to = "stations") %>%
+  group_by(stations) %>%
+  count() %>%
+  top_n(5, wt = n) %>%
+  arrange(desc(n)) %>%
+  ungroup() %>%
+  data.frame() %>% rename(valor = n) %>% 
+  slice(0:10)
+  
+# reordenar los valores de mayor a menor.
+top_stations$stations <- reorder(top_stations$stations, top_stations$valor)
+
+# Graficar las estaciones mas usadas.
+ggplot(top_stations, aes(x = stations, y = valor)) +
+  geom_bar(stat = "identity", fill = "#27408B") +
+  geom_text(aes(label = stations, hjust = ifelse(valor < mean(valor), -0.2, 1.2)), size = 4, color = ifelse(top_stations$valor > mean(top_stations$valor), "white", "black")) +
+  coord_flip() +
+  theme(axis.text.y = element_blank()) +
+  labs(x = "Estaciones",
+       y = "Frecuencia")
+```
+
+- Se han reunido todas las estaciones y se han tomado las 10 estaciones mas utilizadas por los miembros casuales.
+
